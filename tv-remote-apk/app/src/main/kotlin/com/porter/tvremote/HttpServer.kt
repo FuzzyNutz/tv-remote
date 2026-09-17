@@ -1,6 +1,7 @@
 package com.porter.tvremote
 
 import android.content.Context
+import android.content.SharedPreferences
 import android.util.Log
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
@@ -13,12 +14,15 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import java.net.InetSocketAddress
+import java.net.ServerSocket
 
 /**
  * Embedded Ktor CIO HTTP server.
  *
  * Exposes the same REST API as the Python/Flask remote_server.py so the existing
- * index.html works without modification. Runs on port 8080 (accessible on LAN).
+ * index.html works without modification. The listening port is configurable; it
+ * defaults to 8080 and can be moved if something else on the TV already uses it.
  *
  * Routes:
  *   GET  /                       → serve index.html from assets
@@ -33,10 +37,21 @@ import kotlinx.serialization.json.Json
 class HttpServer(
     private val context: Context,
     private val adb: AdbController,
-    val port: Int = 8080,
+    val port: Int = HttpServerSettings.DEFAULT_PORT,
 ) {
     companion object {
         private const val TAG = "HttpServer"
+        private const val HOST = "0.0.0.0"
+
+        /**
+         * Ktor CIO binds asynchronously, so detect an occupied port before starting it.
+         * This makes the bind failure catchable by RemoteService instead of crashing the app.
+         */
+        internal fun verifyPortAvailable(port: Int) {
+            ServerSocket().use { probe ->
+                probe.bind(InetSocketAddress(HOST, port))
+            }
+        }
     }
 
     @Serializable
@@ -57,7 +72,8 @@ class HttpServer(
     private var server: ApplicationEngine? = null
 
     fun start() {
-        server = embeddedServer(CIO, port = port, host = "0.0.0.0") {
+        verifyPortAvailable(port)
+        server = embeddedServer(CIO, port = port, host = HOST) {
             install(ContentNegotiation) {
                 json(Json { ignoreUnknownKeys = true })
             }
@@ -182,4 +198,40 @@ class HttpServer(
                 ?.hostAddress ?: "unknown"
         } catch (_: Exception) { "unknown" }
     }
+}
+
+/** The app's single SharedPreferences file. */
+internal object Preferences {
+    private const val NAME = "tv_remote_settings"
+
+    fun of(context: Context): SharedPreferences =
+        context.getSharedPreferences(NAME, Context.MODE_PRIVATE)
+}
+
+/** Persisted HTTP-port configuration shared by the activity and foreground service. */
+internal object HttpServerSettings {
+    /**
+     * Unchanged from the versions already installed in the field: existing users keep
+     * their bookmarks working after an update. Anyone whose port 8080 is taken — Kodi
+     * being the usual culprit — can pick another one in the app.
+     */
+    const val DEFAULT_PORT = 8080
+    private const val HTTP_PORT_KEY = "http_port"
+
+    fun load(context: Context): Int {
+        val stored = Preferences.of(context).getInt(HTTP_PORT_KEY, DEFAULT_PORT)
+        return stored.takeIf(::isValidPort) ?: DEFAULT_PORT
+    }
+
+    fun save(context: Context, port: Int) {
+        require(isValidPort(port)) { "Invalid HTTP port: $port" }
+        Preferences.of(context)
+            .edit()
+            .putInt(HTTP_PORT_KEY, port)
+            .apply()
+    }
+
+    internal fun parsePort(value: String): Int? = value.toIntOrNull()?.takeIf(::isValidPort)
+
+    private fun isValidPort(port: Int): Boolean = port in 1..65535
 }
