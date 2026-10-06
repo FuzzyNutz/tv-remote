@@ -23,7 +23,7 @@ class AdbController(private val context: Context) {
 
     companion object {
         private const val TAG = "AdbController"
-        const val ADB_HOST = "127.0.0.1"
+        const val ADB_HOST = "192.168.2.18"
         const val ADB_PORT = 5555
         const val KEYCODE_WAKEUP = 224
         private const val RECONNECT_DELAY_MS = 250L
@@ -39,6 +39,8 @@ class AdbController(private val context: Context) {
             "settings" to "com.android.settings/.Settings",
             "spotify"  to "com.spotify.tv.android/.SpotifyTVActivity",
             "kodi"     to KODI_ACTIVITY,
+            "moviebox" to "com.movieboxpro.androidtv/com.movieboxpro.android.view.activity.MainActivity",
+            "clipbox"  to "org.clipbox.player/.tv.TvHomeActivity",
         )
 
         /** AdbLib Base64 adapter using Android's built-in Base64 codec. */
