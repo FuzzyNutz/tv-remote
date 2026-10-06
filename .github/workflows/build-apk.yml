@@ -10,6 +10,10 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: tv-remote-apk
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,7 +23,6 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
 
       - name: Make Gradle executable
         run: chmod +x gradlew
@@ -31,4 +34,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tv-remote-debug
-          path: app/build/outputs/apk/debug/*.apk
+          path: tv-remote-apk/app/build/outputs/apk/debug/*.apk
