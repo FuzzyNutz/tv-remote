@@ -128,6 +128,33 @@ class HttpServer(
             adbCall(call) { adb.keyEvent(code) }
         }
 
+         // ── HDMI input switching ──────────────────────────────────────────────
+
+        post("/api/hdmi/{port}") {
+            val hdmiPort = call.parameters["port"]?.toIntOrNull()
+
+            val hw = when (hdmiPort) {
+                1 -> "HW2"
+                2 -> "HW3"
+                3 -> "HW4"
+                4 -> "HW5"
+                else -> return@post call.respond(
+                    HttpStatusCode.BadRequest,
+                    ApiResult(ok = false, error = "Invalid HDMI port")
+                )
+            }
+
+            val inputId =
+                "com.vt.source.external%2F.hdmi.HdmiTvInputService%2F$hw"
+
+            adbCall(call) {
+                adb.shell(
+                    "am start -a android.intent.action.VIEW " +
+                    "-d 'content://android.media.tv/passthrough/$inputId'"
+                )
+            }
+        }
+        
         // ── App launch ────────────────────────────────────────────────────────
 
         post("/api/launch/{name}") {
