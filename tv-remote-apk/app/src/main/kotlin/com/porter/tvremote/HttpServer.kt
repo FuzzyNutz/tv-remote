@@ -215,7 +215,7 @@ internal object HttpServerSettings {
      * their bookmarks working after an update. Anyone whose port 8080 is taken — Kodi
      * being the usual culprit — can pick another one in the app.
      */
-    const val DEFAULT_PORT = 8080
+    const val DEFAULT_PORT = 8081
     private const val HTTP_PORT_KEY = "http_port"
 
     fun load(context: Context): Int {
