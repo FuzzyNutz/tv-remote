@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">TV Remote</string>
+    <string name="app_name">Hisense Remote</string>
     <string name="notif_channel_name">TV Remote Server</string>
     <string name="notif_channel_desc">Background web remote and Yatse/Kore starter</string>
     <string name="notif_title">TV Remote Server</string>
