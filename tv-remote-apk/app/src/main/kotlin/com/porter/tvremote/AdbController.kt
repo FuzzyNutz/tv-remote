@@ -23,7 +23,7 @@ class AdbController(private val context: Context) {
 
     companion object {
         private const val TAG = "AdbController"
-        const val ADB_HOST = "127.0.0.0.1"
+        const val ADB_HOST = "127.0.0.1"
         const val ADB_PORT = 5555
         const val KEYCODE_WAKEUP = 224
         private const val RECONNECT_DELAY_MS = 250L
