@@ -9,7 +9,7 @@ android {
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.porter.tvremote"
+        applicationId = "com.porter.hisense"
         minSdk = 26
         targetSdk = 36
         versionCode = 7
